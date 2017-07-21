@@ -155,7 +155,7 @@ add_action('init', 'wporg_register_taxonomy_project_category');
  * Register meta box(es).
  */
 function wppp_register_meta_boxes() {
-    add_meta_box( 'meta-box-id', __( 'Project Information', 'textdomain' ), 'wppp_my_display_callback', 'wppp_project' );
+    add_meta_box( 'project-information-meta-box', __( 'Project Information', 'textdomain' ), 'wppp_project_info_display_callback', 'wppp_project', 'side' );
 }
 add_action( 'add_meta_boxes', 'wppp_register_meta_boxes' );
  
@@ -164,11 +164,59 @@ add_action( 'add_meta_boxes', 'wppp_register_meta_boxes' );
  *
  * @param WP_Post $post Current post object.
  */
-function wppp_my_display_callback( $post ) {
+function wppp_project_info_display_callback( $post ) {
     // Display code/markup goes here. Don't forget to include nonces!
-    echo'Project Start Date: <input type="date" name="project_startdate" required>';
-    echo'Project End Date: <input type="date" name="project_enddate" required>';
+     
+    $values = get_post_custom( $post->ID );
+    $text = isset( $values['project_startdate'] ) ? esc_attr( $values['project_startdate'][0] ) : ”;
+    // $selected = isset( $values['my_meta_box_select'] ) ? esc_attr( $values['my_meta_box_select'][0] ) : ”;
+    // $check = isset( $values['my_meta_box_check'] ) ? esc_attr( $values['my_meta_box_check'][0] ) : ”;
+    
+    // We'll use this nonce field later on when saving.
+    wp_nonce_field( 'my_meta_box_nonce', 'meta_box_nonce' );
+    ?>
+
+        <p>
+            <label for="project_startdate">Project Start Date</label>
+            <input type="date" name="project_startdate" id="project_startdate" value="<?php echo $text; ?> "/>
+        </p>
+        <p>
+            <label for="project_enddate">Project End Date</label>
+            <input type="date" name="project_enddate" id="project_enddate" />
+        </p>
+    <?php    
 }
+
+
+function cd_meta_box_save( $post_id ) {
+    // Bail if we're doing an auto save
+    if( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+     
+    // if our nonce isn't there, or we can't verify it, bail
+    if( !isset( $_POST['meta_box_nonce'] ) || !wp_verify_nonce( $_POST['meta_box_nonce'], 'my_meta_box_nonce' ) ) return;
+     
+    // if our current user can't edit this post, bail
+    if( !current_user_can( 'edit_post' ) ) return;
+
+    // now we can actually save the data
+    $allowed = array( 
+        'a' => array( // on allow a tags
+            'href' => array() // and those anchors can only have href attribute
+        )
+    );
+     
+    // Make sure your data is set before trying to save it
+    if( isset( $_POST['project_startdate'] ) )
+        update_post_meta( $post_id, 'project_startdate', wp_kses( $_POST['project_startdate'], $allowed ) );
+         
+    // if( isset( $_POST['my_meta_box_select'] ) )
+    //     update_post_meta( $post_id, 'my_meta_box_select', esc_attr( $_POST['my_meta_box_select'] ) );
+         
+    // This is purely my personal preference for saving check-boxes
+    // $chk = isset( $_POST['my_meta_box_check'] ) && $_POST['my_meta_box_select'] ? 'on' : 'off';
+    // update_post_meta( $post_id, 'my_meta_box_check', $chk );
+}
+add_action( 'save_post', 'cd_meta_box_save' );
  
 /**
  * Save meta box content.
