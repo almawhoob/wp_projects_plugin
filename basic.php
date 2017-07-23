@@ -298,14 +298,18 @@ add_action( 'save_post', 'wppp_save_meta_box' );
             }
 
             if ('wppp_project' === get_post_type()) {
-                echo '<p>Project Starts: <br/> <strong>'; 
+                // project start date 
+                echo '<p>Project Starts: <br/><strong>';
                 echo get_post_meta($post_id, 'project_startdate', true);
-                echo '</strong><br/><br/> Project Ends: <br/> <strong>'; 
+                echo '</strong><br/><br/>';
+                // project end date
+                echo 'Project Ends: <br/><strong>'; 
                 echo get_post_meta($post_id, 'project_enddate', true); 
-                echo '</strong><br/></p> <p>';
-                echo 'Max number of participants: <br/> <strong>';
+                echo '</strong><br/>';
+                // maximum number of participants
+                echo 'Max number of participants: <br/><strong>';
                 echo get_post_meta($post_id, 'project_max_members', true);
-                echo '</strong></p>'; 
+                echo '</strong></p>';
             };
             echo $args['after_widget'];
             }//end of if-statement for wppp_project
